@@ -18,7 +18,7 @@ class _MyHomePageState extends State<MyHomePage> {
   final TextEditingController chatController = TextEditingController();
   final _channel = WebSocketChannel.connect(
     Uri.parse(
-        'wss://echo.websocket.events'), // Replace with your WebSocket server URL
+        'ws://133.242.143.29:80'), // Replace with your WebSocket server URL
   );
   List<ChatMessage> chatMessages = [];
 
