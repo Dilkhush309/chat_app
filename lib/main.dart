@@ -17,7 +17,7 @@ class MyApp extends StatelessWidget {
             ColorScheme.fromSeed(seedColor: Colors.greenAccent.shade100),
         useMaterial3: true,
       ),
-      home: const MyHomePage(title: 'Chat Application'),
+      home: ChatApp(),
     );
   }
 }

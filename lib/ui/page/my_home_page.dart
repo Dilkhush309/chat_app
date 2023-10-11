@@ -1,38 +1,91 @@
+import 'dart:convert';
+import 'package:flutter/services.dart' as root_bundle;
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
+import '../chat_message.dart';
 
-import '../widget/chat_message.dart';
+class ChatApp extends StatelessWidget {
+  ChatApp({super.key});
 
-class MyHomePage extends StatefulWidget {
-  const MyHomePage({super.key, required this.title});
-
-  final String title;
+  final WebSocketChannel channel =
+      WebSocketChannel.connect(Uri.parse('wss://echo.websocket.events'));
 
   @override
-  State<MyHomePage> createState() => _MyHomePageState();
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      title: 'Chat App',
+      home: Scaffold(
+        appBar: AppBar(
+          title: const Text('Chat App'),
+        ),
+        body: ChatScreen(channel: channel),
+      ),
+    );
+  }
 }
 
-class _MyHomePageState extends State<MyHomePage> {
+class ChatScreen extends StatefulWidget {
+  const ChatScreen({super.key, required this.channel});
+
+  final WebSocketChannel channel;
+
+  @override
+  State<ChatScreen> createState() => ChatScreenState();
+}
+
+class ChatScreenState extends State<ChatScreen> {
   final FocusNode _textFocus = FocusNode();
   final TextEditingController chatController = TextEditingController();
-  final _channel = WebSocketChannel.connect(
-    Uri.parse(
-        'wss://echo.websocket.events'), // Replace with your WebSocket server URL
-  );
-  List<ChatMessage> chatMessages = [];
+  // final List<Map<String, dynamic>> chatMessages = [];
+
+  // List<ChatMessage> chatMessages = [];
+
+  List _items =[];
+
+  Future<void> readJson()async{
+    final String response = await root_bundle.rootBundle.loadString('assets/jsonfile.json');
+    final data =await json.decode(response);
+    setState(() {
+      _items =data["items"];
+    });
+  }
+
+  // Future<List<ChatMessage>> ReadJsonData() async {
+  //   final jsonData =
+  //       await root_bundle.rootBundle.loadString('jsonfile/chat_message.json');
+  //   final list = json.decode(jsonData) as List<dynamic>;
+  //   print(list);
+  //   return list.map((e) => ChatMessage.fromJson(e)).toList();
+  // }
+
+  // @override
+  // void initState() {
+  //   super.initState();
+  //   widget.channel.stream.listen((data) {
+  //     Map<String, dynamic> receivedMessage = jsonDecode(data);
+  //     setState(() {
+  //       chatMessages.add(receivedMessage);
+  //     });
+  //   });
+  // }
 
   @override
   void dispose() {
-    _channel.sink.close();
+    widget.channel.sink.close();
     chatController.dispose();
     super.dispose();
   }
 
-  void sendMessage() {
-    if (chatController.text.isNotEmpty) {
-      _channel.sink.add(chatController.text);
-      chatController.text = '';
+  void sendMessage(String text) {
+    if (text.isNotEmpty) {
+      // final message = {
+      //   "text": text,
+      //   "senderId": "user123",
+      //   "receiverId": "user456",
+      // };
+      widget.channel.sink.add(chatController.text);
+      chatController.clear();
       _textFocus.unfocus();
     }
   }
@@ -44,7 +97,6 @@ class _MyHomePageState extends State<MyHomePage> {
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        title: Center(child: Text(widget.title)),
       ),
       body: SafeArea(
         child: Padding(
@@ -53,50 +105,60 @@ class _MyHomePageState extends State<MyHomePage> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Expanded(
-                  child: Padding(
-                padding: const EdgeInsets.all(8),
-                child: StreamBuilder(
-                    stream: _channel.stream,
-                    builder: (context, snapshot) {
-                      if (snapshot.hasData) {
-                        final messageData = snapshot.data.toString();
-                        final chatMessage = ChatMessage(
-                          senderName: 'Dilkhush',
-                          timestamp: formattedTimestamp,
-                          message: messageData,
-                        );
-                        if (messageData.trim().isNotEmpty) {
-                          chatMessages.add(chatMessage);
+                child: Padding(
+                  padding: const EdgeInsets.all(8),
+                  child: StreamBuilder(
+                      stream: widget.channel.stream,
+                      builder: (context, data) {
+                        if(data.hasError){
+                          return Center(child: Text("${data.error}"));
                         }
-                        return ListView.builder(
-                          itemCount: chatMessages.length,
-                          itemBuilder: (context, index) {
-                            final message = chatMessages[index];
-                            return Column(
-                              children: [
-                                ListTile(
-                                  title: Text(
-                                      '${message.timestamp} ${message.senderName}'),
-                                  subtitle: Text(message.message),
-                                ),
-                                const Divider(
-                                  height: 3,
-                                  color: Colors.black,
-                                  thickness: 1,
-                                  indent: 0,
-                                  endIndent: 10,
-                                ),
-                              ],
-                            );
-                          },
-                        );
-                      } else if (snapshot.hasError) {
-                        return Text('Error: ${snapshot.error}');
-                      } else {
-                        return const Center(child: CircularProgressIndicator());
-                      }
-                    }),
-              )),
+                       else if (data.hasData) {
+                          final messageData = data.data as List<ChatMessage>;
+                          // final chatMessage = ChatMessage(
+                          //   senderName: 'Dilkhush',
+                          //   timestamp: formattedTimestamp,
+                          //   message: messageData.toString(),
+                          // );
+                          // if (messageData
+                          //     .isNotEmpty) {
+                          //   chatMessages.add(chatMessage as Map<String, dynamic>);
+                          // }
+                          return ListView.builder(
+                            itemCount: messageData.length,
+                            itemBuilder: (context, index) {
+                              return Column(
+                                children: [
+                                  ListTile(
+                                    // title: Text(
+                                    //     '${message.timestamp} ${message
+                                    //         .senderName.toString()}'),
+                                    // subtitle: Text(message.message),
+                                    title: Text(
+                                        '${messageData[index].timestamp} ${messageData[index]
+                                            .senderName}'),
+                                    subtitle: Text('${messageData[index].message.toString()}'),
+                                  ),
+                                  const Divider(
+                                    height: 3,
+                                    color: Colors.black,
+                                    thickness: 1,
+                                    indent: 0,
+                                    endIndent: 10,
+                                  ),
+                                ],
+                              );
+                            },
+                          );
+                        } else if (data.hasError) {
+                          return Text('Error: ${data.error}');
+                        } else {
+                          return const Center(
+                              child: CircularProgressIndicator());
+                        }
+                      }),
+                ),
+              ),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
@@ -125,14 +187,16 @@ class _MyHomePageState extends State<MyHomePage> {
                           ),
                         ),
                         onFieldSubmitted: (message) {
-                          _channel.sink.add(chatController.text);
+                          widget.channel.sink.add(chatController.text);
                           chatController.text = '';
                         },
                       ),
                     ),
                   ),
                   ElevatedButton(
-                    onPressed: sendMessage,
+                    onPressed: () {
+                      sendMessage(chatController.text);
+                    },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.blue.shade200,
                       shape: RoundedRectangleBorder(
