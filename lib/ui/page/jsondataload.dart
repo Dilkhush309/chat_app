@@ -1,26 +1,44 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
 
 import '../widget/chat_message.dart';
 
-class MyHomePage extends StatefulWidget {
-  const MyHomePage({super.key, required this.title});
+class JsonDataLoad extends StatefulWidget {
+  const JsonDataLoad({super.key, required this.title});
 
   final String title;
 
   @override
-  State<MyHomePage> createState() => _MyHomePageState();
+  State<JsonDataLoad> createState() => _JsonDataLoadState();
 }
 
-class _MyHomePageState extends State<MyHomePage> {
+class _JsonDataLoadState extends State<JsonDataLoad> {
   final FocusNode _textFocus = FocusNode();
   final TextEditingController chatController = TextEditingController();
   final _channel = WebSocketChannel.connect(
     Uri.parse(
         'wss://echo.websocket.events'), // Replace with your WebSocket server URL
   );
-  List<ChatMessage> chatMessages = [];
+  // List<ChatMessage> chatMessages = [];
+
+  List<Map<String, dynamic>> chatMessages = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _channel.stream.listen((data) {
+      // Parse the received JSON data
+      Map<String, dynamic> receivedMessage = jsonDecode(data);
+
+      setState(() {
+        // Update the list of messages
+        chatMessages.add(receivedMessage);
+      });
+    });
+  }
 
 
   @override
@@ -30,9 +48,19 @@ class _MyHomePageState extends State<MyHomePage> {
     super.dispose();
   }
 
+  // void sendMessage(String text) {
+  //   final message = {
+  //     'text': text,
+  //     'sender': 'User123',
+  //   };
+  //   final jsonMessage = jsonEncode(message);
+  //   _channel.sink.add(jsonMessage);
+  //   chatController.clear();
+  // }
   void sendMessage() {
     if (chatController.text.isNotEmpty) {
-      _channel.sink.add(chatController.text);
+      final jsonMessage = jsonEncode(chatController.text);
+      _channel.sink.add(jsonMessage);
       chatController.text = '';
       _textFocus.unfocus();
     }
@@ -61,14 +89,15 @@ class _MyHomePageState extends State<MyHomePage> {
                         builder: (context, snapshot) {
                           if (snapshot.hasData) {
                             final messageData = snapshot.data.toString();
+                            // final messageData = jsonDecode(snapshot.data.toString());
                             final chatMessage = ChatMessage(
                               senderName: 'Dilkhush',
                               timestamp: formattedTimestamp,
                               message: messageData,
                             );
-                            if (messageData.trim().isNotEmpty) {
-                              chatMessages.add(chatMessage);
-                            }
+                            // if (messageData.trim().isNotEmpty) {
+                            //   chatMessages.add(chatMessage);
+                            // }
                             return ListView.builder(
                               itemCount: chatMessages.length,
                               itemBuilder: (context, index) {
@@ -77,8 +106,8 @@ class _MyHomePageState extends State<MyHomePage> {
                                   children: [
                                     ListTile(
                                       title: Text(
-                                          '${message.timestamp} ${message.senderName}'),
-                                      subtitle: Text(message.message),
+                                          '${message['timestamp']} ${message['senderName']}'),
+                                      subtitle: Text(message['message']),
                                     ),
                                     const Divider(
                                       height: 3,
@@ -133,7 +162,7 @@ class _MyHomePageState extends State<MyHomePage> {
                     ),
                   ),
                   ElevatedButton(
-                    onPressed: sendMessage,
+                    onPressed:(){ sendMessage();},
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.blue.shade200,
                       shape: RoundedRectangleBorder(
