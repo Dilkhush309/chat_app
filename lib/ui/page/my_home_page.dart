@@ -112,7 +112,7 @@ class _MyHomePageState extends State<MyHomePage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text('WebSocket Connection Established'),
+              const Text('WebSocket Connection Status'),
               Expanded(
                   child: Padding(
                 padding: const EdgeInsets.all(8),
