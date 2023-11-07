@@ -1,3 +1,4 @@
+import 'package:chat_app/ui/page/client_ui.dart';
 import 'package:chat_app/ui/page/my_home_page.dart';
 import 'package:flutter/material.dart';
 
@@ -17,7 +18,8 @@ class MyApp extends StatelessWidget {
             ColorScheme.fromSeed(seedColor: Colors.greenAccent.shade100),
         useMaterial3: true,
       ),
-      home: const MyHomePage(title: 'Chat App',),
+      // home: const MyHomePage(title: 'Chat App',),
+      home:  const ClientUI(),
     );
   }
 }
