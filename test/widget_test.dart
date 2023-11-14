@@ -1,30 +1,32 @@
-// This is a basic Flutter widget test.
-//
-// To perform an interaction with a widget in your test, use the WidgetTester
-// utility in the flutter_test package. For example, you can send tap and scroll
-// gestures. You can also use WidgetTester to find child widgets in the widget
-// tree, read text, and verify that the values of widget properties are correct.
-
-import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-
 import 'package:chat_app/main.dart';
 
 void main() {
-  testWidgets('Counter increments smoke test', (WidgetTester tester) async {
-    // Build our app and trigger a frame.
+  testWidgets('WebSocket Client Integration Test', (WidgetTester tester) async {
     await tester.pumpWidget(const MyApp());
 
-    // Verify that our counter starts at 0.
-    expect(find.text('0'), findsOneWidget);
-    expect(find.text('1'), findsNothing);
+    // Verify initial state
+    expect(find.text('Server 1'), findsOneWidget);
+    expect(find.text('Server 2 is selected'), findsNothing);
 
-    // Tap the '+' icon and trigger a frame.
-    await tester.tap(find.byIcon(Icons.add));
+    // Tap Server 2 checkbox
+    await tester.tap(find.text('Server 2'));
     await tester.pump();
 
-    // Verify that our counter has incremented.
-    expect(find.text('0'), findsNothing);
-    expect(find.text('1'), findsOneWidget);
+    // Verify that Server 2 is selected
+    expect(find.text('Server 1 is selected'), findsNothing);
+    expect(find.text('Server 2'), findsOneWidget);
+
+    // Tap the Connect Server Button
+    await tester.tap(find.text('Connect Server Button'));
+    await tester.pump();
+
+    // Tap the Authentication Button
+    await tester.tap(find.text('Authentication Button'));
+    await tester.pump();
+
+    // Tap the Disaster Information Button
+    await tester.tap(find.text('Disaster Information Button'));
+    await tester.pump();
   });
 }
