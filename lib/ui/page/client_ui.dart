@@ -18,6 +18,9 @@ class _ClientUIState extends State<ClientUI> {
   bool server2Selected = false;
   String selectedServer = '';
 
+  bool authenticationSuccessful = false;
+  bool receivedDisasterInfo = false;
+
   // Function to handle server 1 checkbox tap
   void handleServer1Tap() {
     setState(() {
@@ -48,12 +51,22 @@ class _ClientUIState extends State<ClientUI> {
 
           // Create a new WebSocket connection
           _channel = IOWebSocketChannel.connect(serverUrl1);
+          if(server1Selected){
+            selectedServer = "Connected to Server 1";
+          }else{
+            selectedServer = "Failed to connect to Server 1";
+          }
         } else if (server2Selected) {
           // Connect to server 2
           selectedServer = 'Server 2 is selected';
 
           // Create a new WebSocket connection
           _channel = IOWebSocketChannel.connect(serverUrl2);
+          if(server2Selected){
+            selectedServer = "Connected to Server 2";
+          }else{
+            selectedServer = "Failed to connect to Server 2";
+          }
         } else {
           selectedServer = 'No server selected';
         }
@@ -84,7 +97,7 @@ class _ClientUIState extends State<ClientUI> {
         print('WebSocket error: $error');
       },
     );
-    // Initialize the WebSocket handshake when the button is cl
+    // Initialize the WebSocket handshake when the button is clicked
     performWebSocketHandshake();
   }
 
@@ -95,6 +108,7 @@ class _ClientUIState extends State<ClientUI> {
           "5e73f1b58a4ab94d54cd8ed93cd55ff46fdd80d16e0f8cf86b87d4968ee655b7"
     };
     _channel.sink.add(json.encode(authenticationMessage));
+    authenticationSuccessful = true;
   }
 
   void _disasterInformationRequest() {
@@ -105,6 +119,7 @@ class _ClientUIState extends State<ClientUI> {
       "response-result": 200
     };
     _channel.sink.add(json.encode(disasterInformation));
+    receivedDisasterInfo = true;
   }
 
   @override
@@ -168,6 +183,7 @@ class _ClientUIState extends State<ClientUI> {
           Padding(
             padding: const EdgeInsets.all(8.0),
             child: ElevatedButton(
+              key: const Key('connectServerButton'),
               style: TextButton.styleFrom(
                   foregroundColor: Colors.black,
                   textStyle: const TextStyle(fontSize: 16)),
@@ -177,6 +193,7 @@ class _ClientUIState extends State<ClientUI> {
             ),
           ),
           const SizedBox(height: 20.0),
+          Text(server2Selected ? 'Server 2 is selected' : 'Server 1 is selected'),
           Text(selectedServer),
           const SizedBox(
             height: 10,
@@ -227,6 +244,7 @@ class _ClientUIState extends State<ClientUI> {
             height: 20,
           ),
           ElevatedButton(
+            key: const Key('authenticationButton'),
             style: TextButton.styleFrom(
                 foregroundColor: Colors.black,
                 textStyle: const TextStyle(fontSize: 16)),
@@ -234,12 +252,16 @@ class _ClientUIState extends State<ClientUI> {
             child: const Text('Authentication Button'),
           ),
           ElevatedButton(
+            key: const Key('disasterInformationButton'),
             style: TextButton.styleFrom(
                 foregroundColor: Colors.black,
                 textStyle: const TextStyle(fontSize: 16)),
             onPressed: _disasterInformationRequest,
             child: const Text('Disaster Information Button'),
           ),
+          // if (connectedToServer2) Text('Connected to Server 2'),
+          if (authenticationSuccessful) Text('Authentication successful'),
+          if (receivedDisasterInfo) Text('Disaster Information Screen'),
         ],
       ),
     );

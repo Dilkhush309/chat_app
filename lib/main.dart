@@ -1,9 +1,9 @@
 import 'package:chat_app/ui/page/client_ui.dart';
-import 'package:chat_app/ui/page/my_home_page.dart';
 import 'package:flutter/material.dart';
 
 void main() {
-  runApp(const MyApp());
+  const String serverUrl2 = 'ws://133.242.143.29:80';
+  runApp( const MyApp());
 }
 
 class MyApp extends StatelessWidget {
